@@ -100,6 +100,7 @@
 package com.mouheb.myapplication
 
 import android.os.Bundle
+import android.webkit.WebSettings
 import androidx.compose.foundation.background
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -112,6 +113,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Check
+
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -119,6 +121,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -128,10 +131,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.mouheb.myapplication.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 //import kotlinx.coroutines.launch
+
+
+
+
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+
+
+
+
+
 
 
 class MainActivity : ComponentActivity() {
@@ -188,6 +208,7 @@ fun FitnessApp() {
                     composable("tracking") { TrackingScreen() }
                     composable("exerciseDetails") { ExerciseDetailsScreen() }
                     composable("settings") { SettingsScreen() }
+                    composable("exerciseVideos") { VideoPlayerPage() }
                     composable("profile") { UserProfileScreen() }
                 }
             }
@@ -263,31 +284,121 @@ fun DrawerContent(navController: NavController, drawerState: DrawerState) {
     }
 }
 
+
+
 @Composable
 fun HomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Welcome to Mouheb Fitness!")
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = { navController.navigate("workouts") },
-            modifier = Modifier.padding(vertical = 8.dp)
+        Text(
+            text = "Welcome to Mouheb Fitness!",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        // Workout Card
+        DashboardCard(
+            title = "Workouts",
+            description = "View and manage your workouts",
+            icon = Icons.Default.FitnessCenter,
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            onClick = { navController.navigate("workouts") }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Progress Tracking Card
+        DashboardCard(
+            title = "Track Progress",
+            description = "Track your daily fitness progress",
+            icon = Icons.Default.Check,
+            backgroundColor = MaterialTheme.colorScheme.secondary,
+            onClick = { navController.navigate("tracking") }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Goals Card
+        DashboardCard(
+            title = "Set Goals",
+            description = "Set your fitness goals",
+            icon = Icons.Default.Person,  // You can replace this with a more appropriate icon
+            backgroundColor = MaterialTheme.colorScheme.tertiary,
+            onClick = { /* Add action for setting goals */ }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Exercise Videos Card
+        DashboardCard(
+            title = "Exercise Videos",
+            description = "Watch exercise tutorials",
+            icon = Icons.Default.VideoLibrary,  // You can replace this with a more appropriate icon
+            backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+            onClick = { navController.navigate("exerciseVideos") }  // Navigate to the exercise videos page
+        )
+    }
+}
+
+
+@Composable
+fun DashboardCard(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    backgroundColor: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
         ) {
-            Text("View Workouts")
-        }
-        Button(
-            onClick = { navController.navigate("tracking") },
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            Text("Track Your Progress")
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .size(48.dp)
+                    .padding(end = 16.dp)
+            )
+
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
     }
 }
+
+
+
+
+
 
 @Composable
 fun WorkoutScreen(navController: NavController) {
@@ -298,40 +409,101 @@ fun WorkoutScreen(navController: NavController) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        Text("Workout List", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        WorkoutCard("Push-ups", "Great for upper body strength.") {
-            navController.navigate("exerciseDetails")
-        }
-        WorkoutCard("Squats", "Strengthen your legs and core.") {
-            navController.navigate("exerciseDetails")
-        }
-        WorkoutCard("Burpees", "Full-body workout that burns calories.") {
-            navController.navigate("exerciseDetails")
-        }
+        Text(
+            text = "Workout List",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Push-ups Card
+        WorkoutCard(
+            title = "Push-ups",
+            description = "Great for upper body strength.",
+            icon = Icons.Default.FitnessCenter,
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            onClick = { navController.navigate("exerciseDetails") }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Squats Card
+        WorkoutCard(
+            title = "Squats",
+            description = "Strengthen your legs and core.",
+            icon = Icons.Default.FitnessCenter,  // Replace with leg icon
+            backgroundColor = MaterialTheme.colorScheme.secondary,
+            onClick = { navController.navigate("exerciseDetails") }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Burpees Card
+        WorkoutCard(
+            title = "Burpees",
+            description = "Full-body workout that burns calories.",
+            icon = Icons.Default.FitnessCenter,  // Replace with full-body icon
+            backgroundColor = MaterialTheme.colorScheme.tertiary,
+            onClick = { navController.navigate("exerciseDetails") }
+        )
     }
 }
 
 @Composable
-fun WorkoutCard(title: String, description: String, onClick: () -> Unit) {
+fun WorkoutCard(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    backgroundColor: Color,
+    onClick: () -> Unit
+) {
     Card(
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .clickable { onClick() }
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
         ) {
-            Text(text = title, style = MaterialTheme.typography.headlineSmall)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = description, style = MaterialTheme.typography.bodyMedium)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .size(48.dp)
+                    .padding(end = 16.dp)
+            )
+
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
     }
 }
+
+
+
+
+
+
+
 
 @Composable
 fun TrackingScreen() {
@@ -342,14 +514,105 @@ fun TrackingScreen() {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        Text("Track Your Progress", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        ProgressCard("Push-ups", "20 reps today")
-        ProgressCard("Squats", "15 reps today")
-        ProgressCard("Burpees", "10 reps today")
-        DailyGoalProgressBar(current = 50, goal = 100) // Example of a progress bar
+        Text(
+            text = "Track Your Progress",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Progress Card for Push-ups
+        ProgressTrackingCard(
+            exercise = "Push-ups",
+            progress = "20 reps",
+            progressPercent = 0.8f, // 80% progress
+            icon = Icons.Default.FitnessCenter,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Progress Card for Squats
+        ProgressTrackingCard(
+            exercise = "Squats",
+            progress = "15 reps",
+            progressPercent = 0.6f, // 60% progress
+            icon = Icons.Default.FitnessCenter,
+            color = MaterialTheme.colorScheme.secondary
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Progress Card for Burpees
+        ProgressTrackingCard(
+            exercise = "Burpees",
+            progress = "10 reps",
+            progressPercent = 0.4f, // 40% progress
+            icon = Icons.Default.FitnessCenter,
+            color = MaterialTheme.colorScheme.tertiary
+        )
     }
 }
+
+@Composable
+fun ProgressTrackingCard(
+    exercise: String,
+    progress: String,
+    progressPercent: Float,
+    icon: ImageVector,
+    color: Color
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = color),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = exercise,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Text(
+                        text = progress,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Progress Bar for Tracking
+            LinearProgressIndicator(
+                progress = progressPercent,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
+                trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
+            )
+        }
+    }
+}
+
 
 @Composable
 fun ProgressCard(exercise: String, progress: String) {
@@ -388,25 +651,94 @@ fun DailyGoalProgressBar(current: Int, goal: Int) {
     }
 }
 
-//@Composable
-//fun ExerciseDetailsScreen() {
-//    Column(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .padding(16.dp),
-//        verticalArrangement = Arrangement.Top,
-//        horizontalAlignment = Alignment.Start
-//    ) {
-//        Text("Exercise Details", style = MaterialTheme.typography.headlineMedium)
-//        Spacer(modifier = Modifier.height(8.dp))
-//        Text("Name: Push-ups")
-//        Text("Description: A basic exercise that works on the chest, shoulders, and triceps.")
-//        Spacer(modifier = Modifier.height(16.dp))
-//        Button(onClick = { /* Implement timer functionality */ }) {
-//            Text("Start Timer")
-//        }
-//    }
-//}
+
+
+
+@Composable
+fun VideoPlayerPage() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Exercise Video Tutorials",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        // Push-ups Video
+        ExerciseVideoCard(
+            videoTitle = "Push-ups Tutorial",
+            videoUrl = "https://youtube.com/shorts/HHRDXEG1YCU?si=wsr0aAJG8BKYOvP5" // Replace with actual video URL
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Squats Video
+        ExerciseVideoCard(
+            videoTitle = "Squats Tutorial",
+            videoUrl = "https://youtu.be/4KmY44Xsg2w?si=bHsAS2lSvesVvEQO" // Replace with actual video URL
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Burpees Video
+        ExerciseVideoCard(
+            videoTitle = "Burpees Tutorial",
+            videoUrl = "https://youtu.be/xQdyIrSSFnE?si=HGbzrojHHXHqgAkz" // Replace with actual video URL
+        )
+    }
+}
+
+@Composable
+fun ExerciseVideoCard(videoTitle: String, videoUrl: String) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = videoTitle,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            ExerciseVideoScreen(videoUrl = videoUrl)
+        }
+    }
+}
+
+@Composable
+fun ExerciseVideoScreen(videoUrl: String) {
+    AndroidView(
+        factory = { context ->
+            WebView(context).apply {
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true // Enable DOM storage for YouTube
+                settings.cacheMode = WebSettings.LOAD_DEFAULT // Use the default cache
+//                settings.setAppCacheEnabled(true) // Enable caching
+
+                // Configure the WebViewClient to handle video playback
+                webViewClient = WebViewClient()
+                loadUrl(videoUrl)
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp) // Set video player height
+    )
+}
+
 
 
 @Composable
@@ -414,27 +746,67 @@ fun ExerciseDetailsScreen() {
     var timeRemaining by remember { mutableStateOf(60) } // Initial countdown time in seconds
     var isRunning by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val progress by derivedStateOf { timeRemaining / 60f } // Progress for the circular timer
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Exercise Details", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Name: Push-ups")
-        Text("Description: A basic exercise that works on the chest, shoulders, and triceps.")
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Timer display
         Text(
-            text = "Time Remaining: ${timeRemaining}s",
-            style = MaterialTheme.typography.headlineMedium
+            text = "Exercise Details",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Card for Exercise Information
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(text = "Name: Push-ups", style = MaterialTheme.typography.headlineSmall)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "Description: A basic exercise that works on the chest, shoulders, and triceps.", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Circular Timer Display
+        Card(
+            modifier = Modifier.size(200.dp),
+            shape = RoundedCornerShape(100.dp), // Circular shape
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CircularProgressIndicator(
+                    progress = progress,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 8.dp,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Text(
+                    text = "$timeRemaining s",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Start/Stop Button
         Button(
@@ -450,12 +822,14 @@ fun ExerciseDetailsScreen() {
                     }
                 }
             },
-            enabled = !isRunning // Disable the button if the timer is already running
+            enabled = !isRunning, // Disable the button if the timer is already running
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
         ) {
             Text(if (isRunning) "Running..." else "Start Timer")
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Reset Button
         Button(
@@ -463,13 +837,14 @@ fun ExerciseDetailsScreen() {
                 isRunning = false
                 timeRemaining = 60 // Reset the timer to 60 seconds
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
         ) {
             Text("Reset Timer")
         }
     }
 }
-
 
 
 @Composable
